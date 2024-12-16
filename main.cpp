@@ -22,12 +22,11 @@ void PrintSet(const std::unordered_set<std::string>& set) {
 
 class Graph {
 public:
-    Graph(const std::string& filename, bool is_log) : is_log_(is_log){
+    Graph(const std::string& filename, bool is_log) : is_log_(is_log), independent_set_(NULL){
         LoadGraphFromFile(filename);
     }
 
     void FindIndependentSet() {
-        std::unordered_set<std::string> independent_set;
         std::unordered_set<std::string> removed;
 
         while (!adj_.empty()) {
@@ -43,7 +42,7 @@ public:
 
             if (min_vertex.empty()) break;
 
-            independent_set.insert(min_vertex);
+            independent_set_.insert(min_vertex);
             removed.insert(min_vertex);
 
             for (const auto& neighbor : adj_[min_vertex]) {
@@ -53,53 +52,26 @@ public:
 
         if (!is_log_) {
             std::cout << "Наибольшее независимое множество: ";
-            PrintSet(independent_set);
+            PrintSet(independent_set_);
         }
     }
 
     void FindVertexCover() {
+        // Теперь создадим вершинное покрытие
         std::unordered_set<std::string> vertex_cover;
-        std::unordered_set<std::string> removed;
 
-        auto adj = adj_;
-
-        while (!adj.empty()) {
-            auto it = adj.begin();
-            std::string u = it->first;
-
-            if (it->second.empty()) {
-                adj.erase(it);
-                continue;
+        // Добавляем все вершины, не входящие в независимое множество
+        for (const auto& vertex : adj_) {
+            if (independent_set_.find(vertex.first) == independent_set_.end()) {
+                vertex_cover.insert(vertex.first);
             }
+        }
 
-            std::string v = it->second.front();
-
-            vertex_cover.insert(u);
-            vertex_cover.insert(v);
-
-            removed.insert(u);
-            removed.insert(v);
-
-            for (const auto& neighbor : adj[u]) {
-                removed.insert(neighbor);
+        // Также добавляем соседей всех вершин из независимого множества
+        for (const auto& vertex : independent_set_) {
+            for (const auto& neighbor : adj_[vertex]) {
+                vertex_cover.insert(neighbor);
             }
-            for (const auto& neighbor : adj[v]) {
-                removed.insert(neighbor);
-            }
-
-            for (auto it = adj.begin(); it != adj.end();) {
-                if (removed.find(it->first) != removed.end()) it = adj.erase(it);
-                else ++it;
-            }
-
-            for (auto& pair : adj) {
-                std::vector<std::string> new_neighbors;
-                for (const auto& neighbor : pair.second) {
-                    if (removed.find(neighbor) == removed.end()) new_neighbors.push_back(neighbor);
-                }
-                pair.second = new_neighbors;
-            }
-            removed.clear();
         }
 
         if (!is_log_) {
@@ -109,6 +81,7 @@ public:
     }
 
 private:
+    std::unordered_set<std::string> independent_set_;
     std::unordered_map<std::string, std::vector<std::string>> adj_;
     bool is_log_;
 
@@ -135,6 +108,7 @@ private:
 };
 
 void Finder(const std::string& filename) {
+    std::cout << filename << std::endl;
     Graph g(filename, false);
     g.FindIndependentSet();
     g.FindVertexCover();
@@ -156,8 +130,29 @@ void LOG(std::ofstream& log_file, const std::string& filename) {
     log_file << "Среднее время: " << total_time / 10 << "мкс\n\n";
 }
 
-int main() {    
+void TEST() {
+    Finder("t1.txt");
+    Finder("input.txt");
+
+    Finder("one-isolated.txt");
+    Finder("two-isolated.txt");
+    Finder("some-isolated.txt");
+
+    Finder("tree.txt");
+    Finder("two-trees.txt");
+    
+    Finder("chain.txt");
+    Finder("trangle.txt");
+    Finder("simple-cycle.txt");
+    Finder("two-part.txt");
+}
+
+int main() { 
     setlocale(LC_ALL, "rus");
+    
+    //TEST();
+    //return 0;
+
     std::cout << "Выберете режим работы:\n";
     std::cout << "1. Найти наибольшее независимое множество вершин и наименьшее вершинное покрытие в графе\n";
     std::cout << "2. Получить данные о скорости выполнения\n";
