@@ -57,21 +57,10 @@ public:
     }
 
     void FindVertexCover() {
-        // Теперь создадим вершинное покрытие
         std::unordered_set<std::string> vertex_cover;
 
-        // Добавляем все вершины, не входящие в независимое множество
         for (const auto& vertex : adj_) {
-            if (independent_set_.find(vertex.first) == independent_set_.end()) {
-                vertex_cover.insert(vertex.first);
-            }
-        }
-
-        // Также добавляем соседей всех вершин из независимого множества
-        for (const auto& vertex : independent_set_) {
-            for (const auto& neighbor : adj_[vertex]) {
-                vertex_cover.insert(neighbor);
-            }
+            if (independent_set_.find(vertex.first) == independent_set_.end()) vertex_cover.insert(vertex.first);
         }
 
         if (!is_log_) {
@@ -149,9 +138,6 @@ void TEST() {
 
 int main() { 
     setlocale(LC_ALL, "rus");
-    
-    //TEST();
-    //return 0;
 
     std::cout << "Выберете режим работы:\n";
     std::cout << "1. Найти наибольшее независимое множество вершин и наименьшее вершинное покрытие в графе\n";
